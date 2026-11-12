@@ -112,11 +112,22 @@ func newCreateCmd(f *cmdutil.Factory) *cli.Command {
 			}
 
 			// Create the TestPlan linked to the entity.
-			plan, err := client.CreateEntity(ctx, "TestPlan", map[string]any{
-				"Name":          planName,
-				"Project":       map[string]any{"Id": projectID},
-				"LinkedGeneral": map[string]any{"Id": entityID},
-			})
+			// LinkedGeneral alone is not enough — the Tests tab in TP also requires
+			// LinkedAssignable and the type-specific field (LinkedBug / LinkedUserStory)
+			// to be set at creation time.
+			planBody := map[string]any{
+				"Name":             planName,
+				"Project":          map[string]any{"Id": projectID},
+				"LinkedGeneral":    map[string]any{"Id": entityID},
+				"LinkedAssignable": map[string]any{"Id": entityID},
+			}
+			switch entityType {
+			case "Bug":
+				planBody["LinkedBug"] = map[string]any{"Id": entityID}
+			case "UserStory":
+				planBody["LinkedUserStory"] = map[string]any{"Id": entityID}
+			}
+			plan, err := client.CreateEntity(ctx, "TestPlan", planBody)
 			if err != nil {
 				return fmt.Errorf("creating test plan: %w", err)
 			}
