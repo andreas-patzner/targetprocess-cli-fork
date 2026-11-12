@@ -3,6 +3,7 @@
 BIN       := tp
 CMD       := ./cmd/tp
 COVER_OUT := coverage.out
+VERSION   := $(shell git describe --tags --always --dirty 2>/dev/null || echo dev)
 
 all: validate lint test build
 
@@ -47,7 +48,7 @@ capture-testdata:
 ## ── Build ─────────────────────────────────────────────────────────────
 
 build:
-	CGO_ENABLED=0 go build -ldflags="-s -w" -trimpath -o $(BIN) $(CMD)
+	CGO_ENABLED=0 go build -ldflags="-s -w -X main.version=$(VERSION)" -trimpath -o $(BIN) $(CMD)
 
 clean:
 	rm -f $(BIN) $(COVER_OUT)
